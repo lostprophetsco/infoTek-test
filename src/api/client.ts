@@ -61,9 +61,11 @@ class ApiClient {
     await new Promise(resolve => setTimeout(resolve, 300)) // Simulate network delay
 
     const method = options.method || 'GET'
+    const url = new URL(endpoint, 'http://localhost')
+    const path = url.pathname
 
     // Auth
-    if (endpoint === '/auth/login' && method === 'POST') {
+    if (path === '/auth/login' && method === 'POST') {
       const body = JSON.parse(options.body as string) as LoginRequest
       if (body.username === 'admin' && body.password === 'admin') {
         return {
@@ -79,33 +81,54 @@ class ApiClient {
     }
 
     // Books
-    if (endpoint === '/books' && method === 'GET') {
-      const page = 1
-      const perPage = 20
+    if (path === '/books' && method === 'GET') {
+      const page = parseInt(url.searchParams.get('page') || '1')
+      const perPage = parseInt(url.searchParams.get('per-page') || '20')
+      const search = url.searchParams.get('search')
+      const year = url.searchParams.get('year')
+      const authorId = url.searchParams.get('author_id')
+
+      let filteredBooks = [...mockBooks]
+
+      if (search) {
+        filteredBooks = filteredBooks.filter(book =>
+          book.title.toLowerCase().includes(search.toLowerCase())
+        )
+      }
+
+      if (year) {
+        filteredBooks = filteredBooks.filter(book => book.year === parseInt(year))
+      }
+
+      if (authorId) {
+        filteredBooks = filteredBooks.filter(book =>
+          book.authors.some(author => author.id === parseInt(authorId))
+        )
+      }
 
       return {
         success: true,
         data: {
-          items: mockBooks,
+          items: filteredBooks,
           pagination: {
-            total: mockBooks.length,
+            total: filteredBooks.length,
             page,
             per_page: perPage,
-            total_pages: Math.ceil(mockBooks.length / perPage)
+            total_pages: Math.ceil(filteredBooks.length / perPage)
           }
         }
       } as T
     }
 
-    if (endpoint.match(/^\/books\/\d+$/) && method === 'GET') {
-      const id = parseInt(endpoint.split('/')[2])
+    if (path.match(/^\/books\/\d+$/) && method === 'GET') {
+      const id = parseInt(path.split('/')[2])
       const book = mockBooks.find(b => b.id === id)
       if (!book) throw new Error('Book not found')
       return { success: true, data: book } as T
     }
 
     // Authors
-    if (endpoint === '/authors' && method === 'GET') {
+    if (path === '/authors' && method === 'GET') {
       return {
         success: true,
         data: {
@@ -120,16 +143,16 @@ class ApiClient {
       } as T
     }
 
-    if (endpoint.match(/^\/authors\/\d+$/) && method === 'GET') {
-      const id = parseInt(endpoint.split('/')[2])
+    if (path.match(/^\/authors\/\d+$/) && method === 'GET') {
+      const id = parseInt(path.split('/')[2])
       const author = mockAuthorsFull.find(a => a.id === id)
       if (!author) throw new Error('Author not found')
       return { success: true, data: author } as T
     }
 
     // Reports
-    if (endpoint === '/reports/top-authors' && method === 'GET') {
-      const year = 2024
+    if (path === '/reports/top-authors' && method === 'GET') {
+      const year = parseInt(url.searchParams.get('year') || '2024')
 
       return {
         success: true,
