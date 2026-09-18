@@ -5,6 +5,7 @@
         <a class="navbar-brand" href="/">Каталог книг</a>
         <div class="navbar-nav ms-auto">
           <router-link to="/" class="nav-link">Каталог</router-link>
+          <router-link to="/top-authors" class="nav-link">ТОП авторы</router-link>
           <template v-if="isAuthenticated">
             <span class="nav-link text-light">{{ user?.username }}</span>
             <a href="#" class="nav-link" @click.prevent="logout">Выйти</a>

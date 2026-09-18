@@ -29,6 +29,11 @@ const router = createRouter({
       name: 'book-edit',
       component: () => import('./views/BookForm.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/top-authors',
+      name: 'top-authors',
+      component: () => import('./views/TopAuthors.vue')
     }
   ]
 })

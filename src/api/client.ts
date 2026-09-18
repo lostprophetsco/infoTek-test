@@ -17,7 +17,7 @@ const USE_MOCK = true // Switch to false when real backend is ready
 
 class ApiClient {
   private token: string | null = null
-  private nextBookId = 11
+  private nextBookId = 41
 
   setToken(token: string) {
     this.token = token
@@ -118,10 +118,14 @@ class ApiClient {
         )
       }
 
+      const start = (page - 1) * perPage
+      const end = start + perPage
+      const paginatedBooks = filteredBooks.slice(start, end)
+
       return {
         success: true,
         data: {
-          items: filteredBooks,
+          items: paginatedBooks,
           pagination: {
             total: filteredBooks.length,
             page,
@@ -205,16 +209,31 @@ class ApiClient {
     if (path === '/reports/top-authors' && method === 'GET') {
       const year = parseInt(url.searchParams.get('year') || '2024')
 
+      const authorBookCounts = mockAuthors.map(author => {
+        const booksInYear = mockBooks.filter(
+          book => book.year === year && book.authors.some(a => a.id === author.id)
+        )
+        return {
+          author_id: author.id,
+          full_name: author.full_name,
+          books_count: booksInYear.length
+        }
+      })
+
+      const sortedAuthors = authorBookCounts
+        .filter(a => a.books_count > 0)
+        .sort((a, b) => b.books_count - a.books_count)
+        .slice(0, 10)
+        .map((item, index) => ({
+          ...item,
+          rank: index + 1
+        }))
+
       return {
         success: true,
         data: {
           year,
-          items: mockAuthorsFull.map((author, index) => ({
-            rank: index + 1,
-            author_id: author.id,
-            full_name: author.full_name,
-            books_count: author.books.length
-          }))
+          items: sortedAuthors
         }
       } as T
     }

@@ -140,14 +140,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { apiClient } from '../api/client'
 import { useAuth } from '../composables/useAuth'
 import { useSubscriptions } from '../composables/useSubscriptions'
+import { useBookYears } from '../composables/useBookYears'
 import type { Book, AuthorShort, Pagination } from '../types/api'
 
 const { isUser } = useAuth()
 const { isSubscribed, toggleSubscription } = useSubscriptions()
+const { availableYears } = useBookYears()
 
 const books = ref<Book[]>([])
 const authors = ref<AuthorShort[]>([])
@@ -163,11 +165,6 @@ const filters = ref({
   search: '',
   year: null as number | null,
   author_id: null as number | null
-})
-
-const availableYears = computed(() => {
-  const years = [...new Set(books.value.map(book => book.year))]
-  return years.sort((a, b) => b - a)
 })
 
 let searchTimeout: number | null = null
