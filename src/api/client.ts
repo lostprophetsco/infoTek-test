@@ -17,6 +17,7 @@ const USE_MOCK = true // Switch to false when real backend is ready
 
 class ApiClient {
   private token: string | null = null
+  private nextBookId = 11
 
   setToken(token: string) {
     this.token = token
@@ -55,6 +56,17 @@ class ApiClient {
     }
 
     return response.json()
+  }
+
+  private parseBookFormData(formData: FormData) {
+    const title = formData.get('title') as string
+    const year = parseInt(formData.get('year') as string)
+    const description = formData.get('description') as string || ''
+    const isbn = formData.get('isbn') as string || ''
+    const authorIds = JSON.parse(formData.get('author_ids') as string) as number[]
+    const authors = mockAuthors.filter(a => authorIds.includes(a.id))
+    
+    return { title, year, description, isbn, authors }
   }
 
   private async mockRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -125,6 +137,45 @@ class ApiClient {
       const book = mockBooks.find(b => b.id === id)
       if (!book) throw new Error('Book not found')
       return { success: true, data: book } as T
+    }
+
+    if (path === '/books' && method === 'POST') {
+      const formData = options.body as FormData
+      const { title, year, description, isbn, authors } = this.parseBookFormData(formData)
+      
+      const newBook = {
+        id: this.nextBookId++,
+        title,
+        year,
+        description,
+        isbn,
+        cover_url: '',
+        authors
+      }
+      mockBooks.push(newBook)
+      
+      return { success: true, data: newBook } as T
+    }
+
+    if (path.match(/^\/books\/\d+$/) && method === 'PUT') {
+      const id = parseInt(path.split('/')[2])
+      const formData = options.body as FormData
+      const { title, year, description, isbn, authors } = this.parseBookFormData(formData)
+      
+      const index = mockBooks.findIndex(b => b.id === id)
+      if (index === -1) throw new Error('Book not found')
+      
+      mockBooks[index] = { ...mockBooks[index], title, year, description, isbn, authors }
+      
+      return { success: true, data: mockBooks[index] } as T
+    }
+
+    if (path.match(/^\/books\/\d+$/) && method === 'DELETE') {
+      const id = parseInt(path.split('/')[2])
+      const index = mockBooks.findIndex(b => b.id === id)
+      if (index === -1) throw new Error('Book not found')
+      mockBooks.splice(index, 1)
+      return undefined as T
     }
 
     // Authors

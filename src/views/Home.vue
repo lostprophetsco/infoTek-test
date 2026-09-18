@@ -2,6 +2,9 @@
   <div class="home">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1>Каталог книг</h1>
+      <router-link v-if="isUser" to="/books/create" class="btn btn-primary">
+        + Добавить книгу
+      </router-link>
     </div>
 
     <!-- Фильтры -->
@@ -82,6 +85,14 @@
               <p v-if="book.isbn" class="card-text">
                 <small class="text-muted">ISBN: {{ book.isbn }}</small>
               </p>
+              <div v-if="isUser" class="mt-auto pt-2">
+                <router-link :to="`/books/${book.id}/edit`" class="btn btn-sm btn-outline-primary me-2">
+                  Редактировать
+                </router-link>
+                <button class="btn btn-sm btn-outline-danger" @click="handleDelete(book.id)">
+                  Удалить
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -118,7 +129,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { apiClient } from '../api/client'
+import { useAuth } from '../composables/useAuth'
 import type { Book, AuthorShort, Pagination } from '../types/api'
+
+const { isUser } = useAuth()
 
 const books = ref<Book[]>([])
 const authors = ref<AuthorShort[]>([])
@@ -203,6 +217,18 @@ const resetFilters = () => {
   }
   pagination.value.page = 1
   loadBooks()
+}
+
+const handleDelete = async (id: number) => {
+  if (!confirm('Вы уверены, что хотите удалить эту книгу?')) return
+
+  try {
+    await apiClient.deleteBook(id)
+    await loadBooks()
+  } catch (error) {
+    console.error('Failed to delete book:', error)
+    alert('Ошибка при удалении книги')
+  }
 }
 
 onMounted(async () => {

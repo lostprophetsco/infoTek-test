@@ -17,8 +17,34 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('./views/Login.vue')
+    },
+    {
+      path: '/books/create',
+      name: 'book-create',
+      component: () => import('./views/BookForm.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/books/:id/edit',
+      name: 'book-edit',
+      component: () => import('./views/BookForm.vue'),
+      meta: { requiresAuth: true }
     }
   ]
+})
+
+// Route guard
+router.beforeEach((to, _, next) => {
+  const token = localStorage.getItem('token')
+  const requiresAuth = to.meta.requiresAuth
+
+  if (requiresAuth && !token) {
+    next('/login')
+  } else if (to.path === '/login' && token) {
+    next('/')
+  } else {
+    next()
+  }
 })
 
 const app = createApp(App)

@@ -28,6 +28,7 @@ export const useAuth = () => {
     user.value = null
     localStorage.removeItem('token')
     apiClient.clearToken()
+    window.location.href = '/'
   }
 
   const initAuth = () => {
