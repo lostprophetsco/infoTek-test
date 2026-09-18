@@ -85,13 +85,26 @@
               <p v-if="book.isbn" class="card-text">
                 <small class="text-muted">ISBN: {{ book.isbn }}</small>
               </p>
-              <div v-if="isUser" class="mt-auto pt-2">
-                <router-link :to="`/books/${book.id}/edit`" class="btn btn-sm btn-outline-primary me-2">
-                  Редактировать
-                </router-link>
-                <button class="btn btn-sm btn-outline-danger" @click="handleDelete(book.id)">
-                  Удалить
-                </button>
+              <div class="mt-auto pt-2">
+                <template v-if="isUser">
+                  <router-link :to="`/books/${book.id}/edit`" class="btn btn-sm btn-outline-primary me-2">
+                    Редактировать
+                  </router-link>
+                  <button class="btn btn-sm btn-outline-danger" @click="handleDelete(book.id)">
+                    Удалить
+                  </button>
+                </template>
+                <template v-else>
+                  <button
+                    v-for="author in book.authors"
+                    :key="author.id"
+                    class="btn btn-sm me-2"
+                    :class="isSubscribed(author.id) ? 'btn-success' : 'btn-outline-success'"
+                    @click="toggleSubscription(author.id)"
+                  >
+                    {{ isSubscribed(author.id) ? '✓ Подписан' : 'Подписаться' }}: {{ author.full_name }}
+                  </button>
+                </template>
               </div>
             </div>
           </div>
@@ -130,9 +143,11 @@
 import { ref, onMounted, computed } from 'vue'
 import { apiClient } from '../api/client'
 import { useAuth } from '../composables/useAuth'
+import { useSubscriptions } from '../composables/useSubscriptions'
 import type { Book, AuthorShort, Pagination } from '../types/api'
 
 const { isUser } = useAuth()
+const { isSubscribed, toggleSubscription } = useSubscriptions()
 
 const books = ref<Book[]>([])
 const authors = ref<AuthorShort[]>([])
