@@ -5,6 +5,11 @@
         <a class="navbar-brand" href="/">Каталог книг</a>
         <div class="navbar-nav ms-auto">
           <router-link to="/" class="nav-link">Каталог</router-link>
+          <template v-if="isAuthenticated">
+            <span class="nav-link text-light">{{ user?.username }}</span>
+            <a href="#" class="nav-link" @click.prevent="logout">Выйти</a>
+          </template>
+          <router-link v-else to="/login" class="nav-link">Войти</router-link>
         </div>
       </div>
     </nav>
@@ -15,6 +20,9 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from './composables/useAuth'
+
+const { isAuthenticated, user, logout } = useAuth()
 </script>
 
 <style>

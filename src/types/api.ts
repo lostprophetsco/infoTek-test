@@ -1,4 +1,10 @@
 // Auth types
+export interface User {
+  id: number
+  username: string
+  role: string
+}
+
 export interface LoginRequest {
   username: string
   password: string
@@ -9,11 +15,7 @@ export interface LoginResponse {
   data: {
     token: string
     expires_at: string
-    user: {
-      id: number
-      username: string
-      role: string
-    }
+    user: User
   }
 }
 
