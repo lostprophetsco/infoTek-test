@@ -1,5 +1,7 @@
 import type { Book, Author, AuthorShort } from '../types/api'
 
+export const SMS_PILOT_API_KEY = 'XXXXXXXXXXXXYYYYYYYYYYYYZZZZZZZZXXXXXXXXXXXXYYYYYYYYYYYYZZZZZZZZ'
+
 export const mockAuthors: AuthorShort[] = [
   { id: 1, full_name: 'Александр Пушкин' },
   { id: 2, full_name: 'Лев Толстой' },

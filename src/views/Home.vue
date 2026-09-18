@@ -100,7 +100,7 @@
                     :key="author.id"
                     class="btn btn-sm me-2"
                     :class="isSubscribed(author.id) ? 'btn-success' : 'btn-outline-success'"
-                    @click="toggleSubscription(author.id)"
+                    @click="handleSubscription(author.id, author.full_name)"
                   >
                     {{ isSubscribed(author.id) ? '✓ Подписан' : 'Подписаться' }}: {{ author.full_name }}
                   </button>
@@ -145,11 +145,39 @@ import { apiClient } from '../api/client'
 import { useAuth } from '../composables/useAuth'
 import { useSubscriptions } from '../composables/useSubscriptions'
 import { useBookYears } from '../composables/useBookYears'
+import { useSMS } from '../composables/useSMS'
+import { mockBooks } from '../api/mockData'
 import type { Book, AuthorShort, Pagination } from '../types/api'
 
 const { isUser } = useAuth()
 const { isSubscribed, toggleSubscription } = useSubscriptions()
 const { availableYears } = useBookYears()
+const { sendSMS } = useSMS()
+
+const TEST_PHONE = '79001234567'
+
+const handleSubscription = async (authorId: number, authorName: string) => {
+  const wasSubscribed = isSubscribed(authorId)
+  toggleSubscription(authorId)
+
+  if (!wasSubscribed) {
+    const authorBooks = mockBooks.filter(book =>
+      book.authors.some(a => a.id === authorId)
+    )
+
+    if (authorBooks.length > 0) {
+      const randomBook = authorBooks[Math.floor(Math.random() * authorBooks.length)]
+      const message = `Новая книга от ${authorName}: "${randomBook.title}" (${randomBook.year})`
+
+      const sent = await sendSMS(TEST_PHONE, message)
+      if (sent) {
+        alert(`SMS отправлено! ${message}`)
+      } else {
+        alert('Ошибка при отправке SMS')
+      }
+    }
+  }
+}
 
 const books = ref<Book[]>([])
 const authors = ref<AuthorShort[]>([])
